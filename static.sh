@@ -17,6 +17,12 @@ SRC="$BASE/src"
 DIST="$BASE/dist"
 
 
+
+# log4c
+LOG4C_VER=1.2.4
+LOG4C_NAME=log4c-${LOG4C_VER}
+LOG4C_URL=https://pilotfiber.dl.sourceforge.net/project/log4c/log4c/${LOG4C_VER}/${LOG4C_NAME}.tar.gz
+
 # libev
 LIBEV_VER=4.33
 LIBEV_NAME=libev-${LIBEV_VER}
@@ -113,12 +119,21 @@ build_pkg_func()
     args="--host=${host} --prefix=${prefix} --disable-shared --enable-static CC=${host}-gcc"
 
     case $PKG in
+        $LOG4C_NAME)
+            # libev
+            pushd "$SRC/${ARCH}/$LOG4C_NAME"
+            ./configure $args
+            make clean
+            make -j 18
+            make install
+            popd
+            ;;
         $LIBEV_NAME)
             # libev
             pushd "$SRC/${ARCH}/$LIBEV_NAME"
             ./configure $args
             make clean
-            make -j18
+            make -j 18
             make install
             popd
             ;;
@@ -127,7 +142,7 @@ build_pkg_func()
             pushd "$SRC/${ARCH}/$MBEDTLS_NAME"
             make clean
             # make DESTDIR="${prefix}" CC="${host}-gcc" AR="${host}-ar" LD="${host}-ld" LDFLAGS=-static install -j8
-            make DESTDIR="${prefix}" CC="${host}-gcc" AR="${host}-ar" LD="${host}-ld" LDFLAGS=-static install -j18
+            make DESTDIR="${prefix}" CC="${host}-gcc" AR="${host}-ar" LD="${host}-ld" LDFLAGS=-static install -j 18
             unset DESTDIR
             popd
             ;;
@@ -136,7 +151,7 @@ build_pkg_func()
             pushd "$SRC/${ARCH}/$SODIUM_NAME"
             ./configure $args
             make clean
-            make -j18
+            make -j 18
             make install
             popd
             ;;
@@ -146,7 +161,7 @@ build_pkg_func()
             ./configure $args \
               --enable-unicode-properties --enable-utf8
             make clean
-            make -j18
+            make -j 18
             make install
             popd
             ;;
@@ -155,7 +170,7 @@ build_pkg_func()
             pushd "$SRC/${ARCH}/$CARES_NAME"
             ./configure $args
             make clean
-            make -j18
+            make -j 18
             make install
             popd
             ;;
