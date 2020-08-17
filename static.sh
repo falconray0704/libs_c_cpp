@@ -17,6 +17,10 @@ SRC="$BASE/src"
 DIST="$BASE/dist"
 
 
+# glog
+GLOG_VER=0.4.0
+GLOG_NAME=glog-${GLOG_VER}
+GLOG_URL=https://codeload.github.com/google/glog/tar.gz/v${GLOG_VER}
 
 # log4c
 LOG4C_VER=1.2.4
@@ -116,9 +120,20 @@ build_pkg_func()
     host=$ARCH-linux-gnu
     prefix=${PREFIX}/$ARCH
 #    args="--host=${host} --prefix=${prefix} --disable-shared --enable-static"
-    args="--host=${host} --prefix=${prefix} --disable-shared --enable-static CC=${host}-gcc"
+#    args="--host=${host} --prefix=${prefix} --disable-shared --enable-static CC=${host}-gcc"
+    args="--host=${host} --prefix=${prefix} --enable-static CC=${host}-gcc"
 
     case $PKG in
+        $GLOG_NAME)
+            # glog
+            pushd "$SRC/${ARCH}/$GLOG_NAME"
+            ./autogen.sh
+            ./configure $args
+            make clean
+            make -j 18
+            make install
+            popd
+            ;;
         $LOG4C_NAME)
             # libev
             pushd "$SRC/${ARCH}/$LOG4C_NAME"
@@ -142,7 +157,8 @@ build_pkg_func()
             pushd "$SRC/${ARCH}/$MBEDTLS_NAME"
             make clean
             # make DESTDIR="${prefix}" CC="${host}-gcc" AR="${host}-ar" LD="${host}-ld" LDFLAGS=-static install -j8
-            make DESTDIR="${prefix}" CC="${host}-gcc" AR="${host}-ar" LD="${host}-ld" LDFLAGS=-static install -j 18
+            #export SHARED=1 && make DESTDIR="${prefix}" CC="${host}-gcc" AR="${host}-ar" LD="${host}-ld" LDFLAGS=-static install -j 18
+            export SHARED=1 && make DESTDIR="${prefix}" CC="${host}-gcc" AR="${host}-ar" LD="${host}-ld" install -j 18
             unset DESTDIR
             popd
             ;;

@@ -25,7 +25,7 @@ usage_func()
     echo "[ x86_64, aarch64 ]"
     echo ""
     echoY "Supported libs:"
-    echo "[ LIBEV, SODIUM, MBEDTLS, PCRE, CARES, LOG4C ]"
+    echo "[ LIBEV, SODIUM, MBEDTLS, PCRE, CARES, LOG4C, GLOG ]"
 }
 
 
