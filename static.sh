@@ -16,6 +16,10 @@ PREFIX="$BASE/stage"
 SRC="$BASE/src"
 DIST="$BASE/dist"
 
+# gtest
+GTEST_VER=1.10.0
+GTEST_NAME=googletest-release-${GTEST_VER}
+GTEST_URL=https://codeload.github.com/google/googletest/tar.gz/release-${GTEST_VER}
 
 # glog
 GLOG_VER=0.4.0
@@ -124,6 +128,50 @@ build_pkg_func()
     args="--host=${host} --prefix=${prefix} --enable-static CC=${host}-gcc"
 
     case $PKG in
+        $GTEST_NAME)
+            # gtest
+
+            echoY "EXEC_TOOLCHAIN_ROOT_PATH=${EXEC_TOOLCHAIN_ROOT_PATH}"
+            echoY "EXEC_CMAKE_CXX_COMPILER=${EXEC_CMAKE_CXX_COMPILER}"
+            echoY "EXEC_CMAKE_C_COMPILER=${EXEC_CMAKE_C_COMPILER}"
+            echoY "EXEC_CMAKE_FIND_ROOT_PATH=${EXEC_CMAKE_FIND_ROOT_PATH}"
+            echoY "EXEC_THREADS_PTHREAD_ARG=${EXEC_THREADS_PTHREAD_ARG}"
+
+            pushd "$SRC/${ARCH}/$GTEST_NAME"
+            mkdir build
+            if [ $(arch) != ${ARCH} ]
+            then
+                #echoY "Cross compiling..."
+
+                rm -rf toolchain-${ARCH}.cmake
+
+                echo "set(CMAKE_SYSTEM_NAME Linux)" >> toolchain-${ARCH}.cmake
+                echo "set(CMAKE_CROSSCOMPILING TRUE)" >> toolchain-${ARCH}.cmake
+                echo "set(CMAKE_CXX_COMPILER ${EXEC_CMAKE_CXX_COMPILER})" >> toolchain-${ARCH}.cmake
+                echo "set(CMAKE_C_COMPILER ${EXEC_CMAKE_C_COMPILER})" >> toolchain-${ARCH}.cmake
+                echo "set(CMAKE_FIND_ROOT_PATH ${EXEC_CMAKE_FIND_ROOT_PATH})" >> toolchain-${ARCH}.cmake
+                echo "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)" >> toolchain-${ARCH}.cmake
+                echo "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)" >> toolchain-${ARCH}.cmake
+                echo "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)" >> toolchain-${ARCH}.cmake
+                echo "set(THREADS_PTHREAD_ARG ${EXEC_THREADS_PTHREAD_ARG})" >> toolchain-${ARCH}.cmake
+
+                cat toolchain-${ARCH}.cmake
+                pushd build
+                cmake .. -DCMAKE_INSTALL_PREFIX=${prefix} -DCMAKE_TOOLCHAIN_FILE=../toolchain-${ARCH}.cmake
+                make -j 18
+                make install
+                popd
+            else
+                echoY "Native building..."
+                pushd build
+                cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}
+                make -j 18
+                #make install DESTDIR=${prefix}
+                make install
+                popd
+            fi
+            popd
+            ;;
         $GLOG_NAME)
             # glog
             pushd "$SRC/${ARCH}/$GLOG_NAME"
@@ -230,23 +278,9 @@ build_proj() {
     #cp ./setup/srv/* ${prefix}/bin/
 }
 
-dk_build() {
-    for ARCH in x86_64 aarch64
-    do
-        build_proj $ARCH
-    done
-}
-
 archClean() 
 {
     rm -rf ${PREFIX}/${ARCH} ${SRC}/${ARCH} ${DIST}/${ARCH}
-}
-
-dk_clean() {
-    for ARCH in x86_64 aarch64
-    do
-        archClean $ARCH
-    done
 }
 
 mkdir -p ${PREFIX} 

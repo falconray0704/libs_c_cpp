@@ -25,14 +25,15 @@ usage_func()
     echo "[ x86_64, aarch64 ]"
     echo ""
     echoY "Supported libs:"
-    echo "[ LIBEV, SODIUM, MBEDTLS, PCRE, CARES, LOG4C, GLOG ]"
+    echo "[ LIBEV, SODIUM, MBEDTLS, PCRE, CARES, LOG4C, GLOG, GTEST ]"
 }
 
 
-EXEC_CMD=""
-EXEC_CPU_ARCH=""
-EXEC_BUILD_ROOT_DIR=""
-EXEC_LIBS_LIST=""
+EXEC_CMD=
+EXEC_CPU_ARCH=
+EXEC_BUILD_ROOT_DIR=
+EXEC_LIBS_LIST=
+
 
 
 no_args="true"
@@ -75,12 +76,35 @@ done
 
 [[ "$no_args" == "true" ]] && { usage_func; exit 1; }
 
+#EXEC_TOOLCHAIN_ROOT_PATH=/home/asdf/repos/toolchains/gcc-linaro-6.1.1-2016.08-x86_64_aarch64-linux-gnu
+EXEC_TOOLCHAIN_ROOT_PATH=/opt/zlg/m1808-sdk-v1.3.1-ga/host
+
+#CMAKE_CXX_COMPILER=/home/asdf/repos/toolchains/gcc-linaro-6.1.1-2016.08-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++
+EXEC_CMAKE_CXX_COMPILER=${EXEC_TOOLCHAIN_ROOT_PATH}/bin/${EXEC_CPU_ARCH}-linux-gnu-g++
+
+#CMAKE_C_COMPILER=/home/asdf/repos/toolchains/gcc-linaro-6.1.1-2016.08-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc
+EXEC_CMAKE_C_COMPILER=${EXEC_TOOLCHAIN_ROOT_PATH}/bin/${EXEC_CPU_ARCH}-linux-gnu-gcc
+
+#CMAKE_FIND_ROOT_PATH=/home/asdf/repos/toolchains/gcc-linaro-6.1.1-2016.08-x86_64_aarch64-linux-gnu/
+EXEC_CMAKE_FIND_ROOT_PATH=${EXEC_TOOLCHAIN_ROOT_PATH}
+
+#THREADS_PTHREAD_ARG=/home/asdf/repos/toolchains/gcc-linaro-6.1.1-2016.08-x86_64_aarch64-linux-gnu/
+EXEC_THREADS_PTHREAD_ARG=${EXEC_TOOLCHAIN_ROOT_PATH}
+
+
+
 case ${EXEC_CMD} in
     download) echoY "Downloading packages:${EXEC_LIBS_LIST} ..."
         ./static.sh ${EXEC_CMD} ${EXEC_CPU_ARCH} ${EXEC_BUILD_ROOT_DIR} ${EXEC_LIBS_LIST}
         ;;
     build) echoY "Building packages:${EXEC_LIBS_LIST} ..."
         export PATH=$PATH:/opt/zlg/m1808-sdk-v1.3.1-ga/host/bin/
+
+        export EXEC_TOOLCHAIN_ROOT_PATH=${EXEC_TOOLCHAIN_ROOT_PATH}
+        export EXEC_CMAKE_CXX_COMPILER=${EXEC_CMAKE_CXX_COMPILER}
+        export EXEC_CMAKE_C_COMPILER=${EXEC_CMAKE_C_COMPILER}
+        export EXEC_CMAKE_FIND_ROOT_PATH=${EXEC_CMAKE_FIND_ROOT_PATH}
+        export EXEC_THREADS_PTHREAD_ARG=${EXEC_THREADS_PTHREAD_ARG}
         ./static.sh ${EXEC_CMD} ${EXEC_CPU_ARCH} ${EXEC_BUILD_ROOT_DIR} ${EXEC_LIBS_LIST}
         ;;
 esac

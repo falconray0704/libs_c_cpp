@@ -31,6 +31,8 @@
 *.out
 *.app
 
+*.swp
+
 # BuildRoot Dir
 tmpBuildRoot
 
