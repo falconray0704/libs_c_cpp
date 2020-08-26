@@ -16,6 +16,15 @@ PREFIX="$BASE/stage"
 SRC="$BASE/src"
 DIST="$BASE/dist"
 
+# boost
+BOOST_VER=1.74.0
+BOOST_NAME=boost_1_74_0
+#BOOST_VER=1.64.0
+#BOOST_NAME=boost_1_64_0
+BOOST_URL=https://master.dl.sourceforge.net/project/boost/boost/${BOOST_VER}/${BOOST_NAME}.tar.gz
+BOOST_URL_TYPE=TARGZ_URL
+BOOST_BUILD_TYPE=PRIVATE_BUILD
+
 # libyuv
 LIBYUV_VER=
 LIBYUV_NAME=libyuv
@@ -193,7 +202,7 @@ cmake_build()
     mkdir build
     if [ $(arch) != ${ARCH} ]
     then
-        #echoY "Cross compiling..."
+        echoY "Cross compiling..."
         rm -rf toolchain-${ARCH}.cmake
 
         echo "set(CMAKE_SYSTEM_NAME Linux)" >> toolchain-${ARCH}.cmake
@@ -328,6 +337,33 @@ build_PCRE()
 build_CARES()
 {
     configure_build $1 ""
+}
+
+# boost
+build_BOOST()
+{
+    host=$ARCH-linux-gnu
+    prefix=${PREFIX}/$ARCH
+    
+    local nCPU=$(nproc --all) 
+
+    pushd "$SRC/${ARCH}/$BOOST_NAME"
+
+    if [ $(arch) != ${ARCH} ]
+    then
+        echoY "Cross compiling..."
+        ./bootstrap.sh --prefix=${prefix} --with-python-root=${EXEC_TOOLCHAIN_ROOT_PATH}
+    #    echo "using gcc : arm : ${ARCH}-linux-gnu-g++ ;" >> user-config.jam
+        sed -i "s/using gcc/using gcc \: aarch64 \: aarch64-linux-gnu-g++ \: -std=c++11 /" ./project-config.jam
+    #    echo "using gcc : aarch64 : aarch64-linux-gnu-g++ ;" > project-config.jam
+    #    ./b2 -a toolset=gcc-arm abi=aapcs address-model=64 --prefix=${prefix} --with=all -j${nCPU} 
+        ./b2 --build-type=complete --layout=versioned abi=aapcs address-model=64 cxxflags="-std=c++11" --with=all -j${nCPU} install
+    else
+        echoY "Native building..."
+        ./bootstrap.sh --prefix=${prefix}
+        ./b2 --build-type=complete --layout=versioned --with=all -j${nCPU} install
+    fi
+    popd
 }
 
 # build packages
